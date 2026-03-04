@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block title %}EventSphere – Discover Amazing Events{% endblock %}
+
+{% block extra_styles %}
+<style>
+  .hero {
+    padding: 5rem 2rem 4rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 50% -10%, rgba(255,92,53,0.15), transparent);
+    pointer-events: none;
+  }
+  .hero h1 { font-size: clamp(2.5rem, 6vw, 4.5rem); font-weight: 800; line-height: 1.1; margin-bottom: 1rem; }
+  .hero h1 span { color: var(--accent); }
+  .hero p { color: var(--muted); font-size: 1.1rem; max-width: 500px; margin: 0 auto 2.5rem; }
+
+  .search-bar {
+    display: flex; gap: 0.75rem; max-width: 600px; margin: 0 auto;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 0.5rem; flex-wrap: wrap;
+  }
+  .search-bar input {
+    flex: 1; background: transparent; border: none; color: var(--text);
+    font-family: 'DM Sans', sans-serif; font-size: 0.95rem; padding: 0.4rem 0.5rem; min-width: 180px;
+  }
+  .search-bar input:focus { outline: none; }
+  .search-bar select {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: 8px;
+    color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.9rem; padding: 0.4rem 0.75rem;
+  }
+  .search-bar button { white-space: nowrap; }
+
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+  .section-header h2 { font-size: 1.5rem; font-weight: 700; }
+  .results-count { color: var(--muted); font-size: 0.9rem; }
+
+  .events-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
+
+  .event-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; transition: all 0.3s; text-decoration: none; color: var(--text); display: block; }
+  .event-card:hover { border-color: rgba(255,92,53,0.4); transform: translateY(-5px); box-shadow: 0 24px 48px rgba(0,0,0,0.5); }
+  .event-emoji { font-size: 3.5rem; padding: 2rem; text-align: center; background: var(--surface2); }
+  .event-body { padding: 1.25rem; }
+  .event-body h3 { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; }
+  .event-meta { display: flex; flex-direction: column; gap: 0.3rem; margin: 0.75rem 0; }
+  .event-meta span { font-size: 0.82rem; color: var(--muted); display: flex; align-items: center; gap: 0.4rem; }
+  .event-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+  .price { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.1rem; color: var(--accent); }
+  .price.free { color: var(--success); }
+  .seats-bar { height: 4px; background: var(--surface2); border-radius: 2px; margin-top: 0.75rem; overflow: hidden; }
+  .seats-fill { height: 100%; border-radius: 2px; background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: width 0.5s; }
+  .seats-text { font-size: 0.75rem; color: var(--muted); margin-top: 0.35rem; }
+
+  .empty-state { text-align: center; padding: 5rem 2rem; color: var(--muted); }
+  .empty-state .icon { font-size: 4rem; margin-bottom: 1rem; }
+  .empty-state h3 { font-size: 1.3rem; margin-bottom: 0.5rem; color: var(--text); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="hero">
+  <h1>Discover & Book<br><span>Amazing Events</span></h1>
+  <p>Find tech talks, concerts, workshops and more happening near you.</p>
+  <form class="search-bar" method="GET" action="/">
+    <input type="text" name="q" placeholder="Search events..." value="{{ query }}">
+    <select name="category">
+      <option value="">All Categories</option>
+      {% for cat in categories %}
+        <option value="{{ cat }}" {% if cat == selected_cat %}selected{% endif %}>{{ cat }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn btn-primary btn-sm">Search</button>
+    {% if query or selected_cat %}
+      <a href="/" class="btn btn-outline btn-sm">Clear</a>
+    {% endif %}
+  </form>
+</div>
+
+<div class="container">
+  <div class="section-header">
+    <h2>{% if query or selected_cat %}Search Results{% else %}Upcoming Events{% endif %}</h2>
+    <span class="results-count">{{ events|length }} event{{ 's' if events|length != 1 }}</span>
+  </div>
+
+  {% if events %}
+  <div class="events-grid">
+    {% for event in events %}
+    {% set fill = (event.booked_seats / event.total_seats * 100)|int %}
+    <a href="/event/{{ event.id }}" class="event-card">
+      <div class="event-emoji">{{ event.image_emoji }}</div>
+      <div class="event-body">
+        <div>
+          {% set cat_class = {'Technology':'tag-tech','Music':'tag-music','Business':'tag-business','Workshop':'tag-workshop'} %}
+          <span class="tag {{ cat_class.get(event.category, 'tag-other') }}">{{ event.category }}</span>
+        </div>
+        <h3 style="margin-top:0.6rem;">{{ event.title }}</h3>
+        <div class="event-meta">
+          <span>📅 {{ event.date }} at {{ event.time }}</span>
+          <span>📍 {{ event.location }}</span>
+        </div>
+        <div class="event-footer">
+          <span class="price {% if event.price == 0 %}free{% endif %}">
+            {% if event.price == 0 %}FREE{% else %}₹{{ event.price }}{% endif %}
+          </span>
+          <span style="font-size:0.8rem; color:var(--muted);">{{ event.total_seats - event.booked_seats }} seats left</span>
+        </div>
+        <div class="seats-bar">
+          <div class="seats-fill" style="width:{{ fill }}%"></div>
+        </div>
+        <div class="seats-text">{{ fill }}% filled</div>
+      </div>
+    </a>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="icon">🔍</div>
+    <h3>No events found</h3>
+    <p>Try a different search or <a href="/" style="color:var(--accent);">browse all events</a>.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

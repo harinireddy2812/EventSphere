@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}EventSphere{% endblock %}</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --surface: #13131a;
+      --surface2: #1c1c27;
+      --accent: #ff5c35;
+      --accent2: #ffb830;
+      --text: #f0f0f5;
+      --muted: #7a7a9a;
+      --border: #2a2a3a;
+      --success: #2ecc71;
+      --error: #e74c3c;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
+    h1,h2,h3,h4 { font-family: 'Syne', sans-serif; }
+
+    /* NAV */
+    nav {
+      background: rgba(10,10,15,0.95);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 100;
+      padding: 0 2rem;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 64px;
+    }
+    .nav-brand { font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 800; color: var(--text); text-decoration: none; }
+    .nav-brand span { color: var(--accent); }
+    .nav-links { display: flex; align-items: center; gap: 1.5rem; }
+    .nav-links a { color: var(--muted); text-decoration: none; font-size: 0.9rem; transition: color 0.2s; }
+    .nav-links a:hover { color: var(--text); }
+    .btn { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.5rem 1.2rem; border-radius: 8px; font-family: 'Syne', sans-serif; font-size: 0.85rem; font-weight: 600; cursor: pointer; text-decoration: none; border: none; transition: all 0.2s; }
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-primary:hover { background: #ff7050; transform: translateY(-1px); }
+    .btn-outline { background: transparent; color: var(--text); border: 1px solid var(--border); }
+    .btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-sm { padding: 0.35rem 0.9rem; font-size: 0.8rem; }
+    .btn-danger { background: var(--error); color: white; }
+    .btn-danger:hover { background: #c0392b; }
+    .badge-admin { background: linear-gradient(135deg, var(--accent), var(--accent2)); color: white; padding: 0.2rem 0.6rem; border-radius: 20px; font-size: 0.7rem; font-weight: 700; font-family: 'Syne', sans-serif; }
+
+    /* FLASH */
+    .flash-container { position: fixed; top: 80px; right: 1.5rem; z-index: 200; display: flex; flex-direction: column; gap: 0.5rem; }
+    .flash { padding: 0.8rem 1.2rem; border-radius: 10px; font-size: 0.88rem; font-weight: 500; animation: slideIn 0.3s ease; max-width: 320px; }
+    .flash.success { background: rgba(46,204,113,0.15); border: 1px solid rgba(46,204,113,0.4); color: #2ecc71; }
+    .flash.error { background: rgba(231,76,60,0.15); border: 1px solid rgba(231,76,60,0.4); color: #e74c3c; }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    /* CONTAINER */
+    .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+
+    /* CARDS */
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; transition: all 0.3s; }
+    .card:hover { border-color: rgba(255,92,53,0.3); transform: translateY(-4px); box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
+
+    /* FORMS */
+    .form-group { margin-bottom: 1.2rem; }
+    .form-group label { display: block; margin-bottom: 0.4rem; font-size: 0.85rem; color: var(--muted); font-weight: 500; }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%; padding: 0.75rem 1rem; background: var(--surface2); border: 1px solid var(--border);
+      border-radius: 10px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 0.95rem;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      outline: none; border-color: var(--accent);
+    }
+    .form-group textarea { resize: vertical; min-height: 100px; }
+
+    /* TABLE */
+    table { width: 100%; border-collapse: collapse; }
+    th { text-align: left; padding: 0.75rem 1rem; font-size: 0.8rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); }
+    td { padding: 0.85rem 1rem; font-size: 0.9rem; border-bottom: 1px solid rgba(42,42,58,0.5); }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+
+    /* TAGS */
+    .tag { display: inline-block; padding: 0.25rem 0.7rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; font-family: 'Syne', sans-serif; }
+    .tag-tech { background: rgba(88,166,255,0.15); color: #58a6ff; }
+    .tag-music { background: rgba(255,92,53,0.15); color: var(--accent); }
+    .tag-business { background: rgba(255,184,48,0.15); color: var(--accent2); }
+    .tag-workshop { background: rgba(46,204,113,0.15); color: var(--success); }
+    .tag-other { background: rgba(122,122,154,0.15); color: var(--muted); }
+  </style>
+  {% block extra_styles %}{% endblock %}
+</head>
+<body>
+<nav>
+  <a href="/" class="nav-brand">Event<span>Sphere</span></a>
+  <div class="nav-links">
+    <a href="/">Browse Events</a>
+    {% if session.user %}
+      <a href="/my-bookings">My Bookings</a>
+      {% if session.role == 'admin' %}
+        <a href="/admin">Admin</a>
+      {% endif %}
+      <span style="color:var(--muted); font-size:0.85rem;">Hi, {{ session.name.split()[0] }}</span>
+      {% if session.role == 'admin' %}<span class="badge-admin">ADMIN</span>{% endif %}
+      <a href="/logout" class="btn btn-outline btn-sm">Logout</a>
+    {% else %}
+      <a href="/login" class="btn btn-outline btn-sm">Login</a>
+      <a href="/signup" class="btn btn-primary btn-sm">Sign Up</a>
+    {% endif %}
+  </div>
+</nav>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="flash-container" id="flashContainer">
+    {% for cat, msg in messages %}
+      <div class="flash {{ cat }}">{{ msg }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endwith %}
+
+{% block content %}{% endblock %}
+
+<script>
+  setTimeout(() => {
+    const fc = document.getElementById('flashContainer');
+    if (fc) fc.style.opacity = '0', fc.style.transition = 'opacity 0.5s', setTimeout(() => fc.remove(), 500);
+  }, 3500);
+</script>
+{% block extra_scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}My Bookings – EventSphere{% endblock %}
+{% block extra_styles %}
+<style>
+  .page-header { padding: 2.5rem 2rem 1.5rem; max-width: 1200px; margin: 0 auto; }
+  .page-header h1 { font-size: 2rem; }
+  .page-header p { color: var(--muted); margin-top: 0.3rem; }
+  .bookings-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.25rem; }
+  .booking-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; }
+  .booking-card-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+  .booking-emoji { font-size: 2.5rem; background: var(--surface2); border-radius: 12px; padding: 0.6rem 0.8rem; }
+  .booking-id { font-size: 0.72rem; color: var(--muted); font-family: monospace; margin-top: 0.2rem; }
+  .booking-detail { display: flex; justify-content: space-between; font-size: 0.85rem; padding: 0.4rem 0; border-bottom: 1px solid rgba(42,42,58,0.5); }
+  .booking-detail:last-of-type { border-bottom: none; }
+  .booking-detail span:first-child { color: var(--muted); }
+  .booking-detail span:last-child { font-weight: 500; }
+  .empty-state { text-align: center; padding: 5rem 2rem; color: var(--muted); }
+  .empty-state .icon { font-size: 4rem; margin-bottom: 1rem; }
+  .empty-state h3 { font-size: 1.3rem; margin-bottom: 0.5rem; color: var(--text); }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <h1>My Bookings</h1>
+  <p>All your event registrations in one place.</p>
+</div>
+<div class="container" style="padding-top:0;">
+  {% if bookings %}
+  <div class="bookings-grid">
+    {% for b in bookings %}
+    <div class="booking-card">
+      <div class="booking-card-header">
+        <div class="booking-emoji">{{ b.event.image_emoji if b.event else '🎫' }}</div>
+        <div>
+          <div style="font-family:'Syne',sans-serif; font-weight:700; font-size:1rem;">{{ b.event_title }}</div>
+          <div class="booking-id">Booking #{{ b.id }}</div>
+        </div>
+      </div>
+      <div class="booking-detail"><span>Date</span><span>{{ b.event.date if b.event else 'N/A' }}</span></div>
+      <div class="booking-detail"><span>Location</span><span>{{ b.event.location if b.event else 'N/A' }}</span></div>
+      <div class="booking-detail"><span>Seats</span><span>{{ b.seats }}</span></div>
+      <div class="booking-detail"><span>Total Paid</span><span style="color:var(--accent);">{% if b.total_price == 0 %}FREE{% else %}₹{{ b.total_price }}{% endif %}</span></div>
+      <div class="booking-detail"><span>Booked At</span><span>{{ b.booked_at }}</span></div>
+      <form method="POST" action="/cancel/{{ b.id }}" style="margin-top:1rem;" onsubmit="return confirm('Cancel this booking?')">
+        <button type="submit" class="btn btn-danger btn-sm" style="width:100%; justify-content:center;">Cancel Booking</button>
+      </form>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="icon">🎫</div>
+    <h3>No bookings yet</h3>
+    <p>Browse events and book your first one!</p>
+    <a href="/" class="btn btn-primary" style="margin-top:1.5rem;">Browse Events</a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

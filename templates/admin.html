@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard – EventSphere{% endblock %}
+{% block extra_styles %}
+<style>
+  .page-header { padding: 2.5rem 2rem 1.5rem; max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+  .page-header h1 { font-size: 2rem; }
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1.25rem 1.5rem; }
+  .stat-label { font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem; }
+  .stat-value { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; }
+  .stat-card:nth-child(1) .stat-value { color: var(--accent); }
+  .stat-card:nth-child(2) .stat-value { color: var(--accent2); }
+  .stat-card:nth-child(3) .stat-value { color: #58a6ff; }
+  .stat-card:nth-child(4) .stat-value { color: var(--success); }
+  .section-title { font-size: 1.2rem; margin-bottom: 1rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--border); }
+  .table-box { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; margin-bottom: 2rem; overflow-x: auto; }
+  .fill-bar { width: 80px; height: 6px; background: var(--surface2); border-radius: 3px; display: inline-block; overflow: hidden; }
+  .fill-inner { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 3px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Admin Dashboard</h1>
+    <p style="color:var(--muted); margin-top:0.3rem;">Manage events, bookings, and users.</p>
+  </div>
+  <a href="/admin/create-event" class="btn btn-primary">+ Create Event</a>
+</div>
+
+<div class="container" style="padding-top:0;">
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-label">Total Events</div><div class="stat-value">{{ stats.total_events }}</div></div>
+    <div class="stat-card"><div class="stat-label">Total Bookings</div><div class="stat-value">{{ stats.total_bookings }}</div></div>
+    <div class="stat-card"><div class="stat-label">Registered Users</div><div class="stat-value">{{ stats.total_users }}</div></div>
+    <div class="stat-card"><div class="stat-label">Total Revenue</div><div class="stat-value">₹{{ stats.total_revenue }}</div></div>
+  </div>
+
+  <div class="section-title">All Events</div>
+  <div class="table-box">
+    <table>
+      <thead>
+        <tr>
+          <th>Event</th><th>Category</th><th>Date</th><th>Price</th><th>Seats</th><th>Fill</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for event in events %}
+        {% set fill = (event.booked_seats / event.total_seats * 100)|int %}
+        <tr>
+          <td><strong>{{ event.image_emoji }} {{ event.title }}</strong></td>
+          <td>{{ event.category }}</td>
+          <td>{{ event.date }}</td>
+          <td>{% if event.price == 0 %}<span style="color:var(--success)">FREE</span>{% else %}₹{{ event.price }}{% endif %}</td>
+          <td>{{ event.booked_seats }} / {{ event.total_seats }}</td>
+          <td>
+            <div class="fill-bar"><div class="fill-inner" style="width:{{ fill }}%"></div></div>
+            <span style="font-size:0.78rem; color:var(--muted); margin-left:0.4rem;">{{ fill }}%</span>
+          </td>
+          <td>
+            <a href="/event/{{ event.id }}" class="btn btn-outline btn-sm">View</a>
+            <form method="POST" action="/admin/delete-event/{{ event.id }}" style="display:inline;" onsubmit="return confirm('Delete this event?')">
+              <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section-title">Recent Bookings</div>
+  <div class="table-box">
+    {% if bookings %}
+    <table>
+      <thead><tr><th>Booking ID</th><th>User</th><th>Event</th><th>Seats</th><th>Amount</th><th>Date</th></tr></thead>
+      <tbody>
+        {% for b in bookings %}
+        <tr>
+          <td><code style="color:var(--accent2);">#{{ b.id }}</code></td>
+          <td>{{ b.user }}</td>
+          <td>{{ b.event_title }}</td>
+          <td>{{ b.seats }}</td>
+          <td>{% if b.total_price == 0 %}FREE{% else %}₹{{ b.total_price }}{% endif %}</td>
+          <td>{{ b.booked_at }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div style="padding:2rem; text-align:center; color:var(--muted);">No bookings yet.</div>
+    {% endif %}
+  </div>
+
+  <div class="section-title">Registered Users</div>
+  <div class="table-box">
+    <table>
+      <thead><tr><th>Username</th><th>Name</th><th>Email</th><th>Role</th></tr></thead>
+      <tbody>
+        {% for uname, udata in users.items() %}
+        <tr>
+          <td><code>{{ uname }}</code></td>
+          <td>{{ udata.name }}</td>
+          <td>{{ udata.email }}</td>
+          <td>{% if udata.role == 'admin' %}<span class="badge-admin">ADMIN</span>{% else %}<span style="color:var(--muted);">user</span>{% endif %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
